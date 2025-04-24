@@ -13,7 +13,6 @@ fonttools==4.57.0
 gast==0.4.0
 google-auth==2.39.0
 google-auth-oauthlib==1.0.0
-setuptools
 google-pasta==0.2.0
 grpcio==1.70.0
 h5py==3.11.0
@@ -28,7 +27,6 @@ libclang==18.1.1
 Markdown==3.7
 MarkupSafe==2.1.5
 matplotlib==3.7.5
-numpy==1.24.3
 oauthlib==3.2.2
 opt_einsum==3.4.0
 packaging==25.0
@@ -53,3 +51,5 @@ urllib3==2.2.3
 Werkzeug==3.0.6
 wrapt==1.17.2
 zipp==3.20.2
+
+numpy~=1.24.3
