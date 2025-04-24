@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { put } from "@vercel/blob"
+import { storeImages } from "@/lib/image-storage"
 
 export async function POST(request: Request) {
   try {
@@ -27,21 +27,20 @@ export async function POST(request: Request) {
     if (!pythonApiUrl) {
       console.error("PYTHON_API_URL environment variable is not set")
 
-      // TEMPORARY SOLUTION: Skip the Python API call and create a mock processed image
-      // In a real app, you would remove this and ensure the Python API is working
+      // TEMPORARY SOLUTION: Skip the Python API call and use the original as the "processed" image
       console.log("Using mock processing (skipping Python API)")
 
-      // Upload the original image as the "processed" image for testing
-      const { url: processedUrl } = await put(`images/${id}/processed.jpg`, imageBlob, {
-        access: "public",
-      })
+      // Store both the original and "processed" (same as original in this case)
+      await storeImages(id, imageBlob, imageBlob)
 
-      console.log("Mock processing complete, URL:", processedUrl)
+      // Return the URLs that will serve the images
+      const originalUrl = `/api/images/${id}/original`
+      const processedUrl = `/api/images/${id}/processed`
 
       return NextResponse.json({
         success: true,
         id,
-        originalUrl: imageUrl,
+        originalUrl,
         processedUrl,
         note: "Using mock processing (Python API URL not configured)",
       })
@@ -65,14 +64,17 @@ export async function POST(request: Request) {
         // TEMPORARY SOLUTION: If Python API fails, use the original image as fallback
         console.log("Python API failed, using original image as fallback")
 
-        const { url: processedUrl } = await put(`images/${id}/processed.jpg`, imageBlob, {
-          access: "public",
-        })
+        // Store both the original and "processed" (same as original in this case)
+        await storeImages(id, imageBlob, imageBlob)
+
+        // Return the URLs that will serve the images
+        const originalUrl = `/api/images/${id}/original`
+        const processedUrl = `/api/images/${id}/processed`
 
         return NextResponse.json({
           success: true,
           id,
-          originalUrl: imageUrl,
+          originalUrl,
           processedUrl,
           note: "Using original image (Python API failed)",
         })
@@ -82,16 +84,17 @@ export async function POST(request: Request) {
       const processedImageBlob = await deblurResponse.blob()
       console.log("Received processed image, size:", processedImageBlob.size)
 
-      // Upload the processed image to Vercel Blob
-      const { url: processedUrl } = await put(`images/${id}/processed.jpg`, processedImageBlob, {
-        access: "public",
-      })
-      console.log("Uploaded processed image, URL:", processedUrl)
+      // Store both the original and processed images
+      await storeImages(id, imageBlob, processedImageBlob)
+
+      // Return the URLs that will serve the images
+      const originalUrl = `/api/images/${id}/original`
+      const processedUrl = `/api/images/${id}/processed`
 
       return NextResponse.json({
         success: true,
         id,
-        originalUrl: imageUrl,
+        originalUrl,
         processedUrl,
       })
     } catch (pythonApiError) {
@@ -100,14 +103,17 @@ export async function POST(request: Request) {
       // TEMPORARY SOLUTION: If Python API throws an error, use the original image as fallback
       console.log("Python API error, using original image as fallback")
 
-      const { url: processedUrl } = await put(`images/${id}/processed.jpg`, imageBlob, {
-        access: "public",
-      })
+      // Store both the original and "processed" (same as original in this case)
+      await storeImages(id, imageBlob, imageBlob)
+
+      // Return the URLs that will serve the images
+      const originalUrl = `/api/images/${id}/original`
+      const processedUrl = `/api/images/${id}/processed`
 
       return NextResponse.json({
         success: true,
         id,
-        originalUrl: imageUrl,
+        originalUrl,
         processedUrl,
         note: "Using original image (Python API error)",
       })

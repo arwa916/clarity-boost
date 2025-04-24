@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server"
 
-// In a real application, you would fetch this data from a database
-// For this example, we're constructing the URLs based on the ID
 export async function GET(request: Request, { params }: { params: { id: string } }) {
   try {
     const id = params.id
@@ -13,9 +11,8 @@ export async function GET(request: Request, { params }: { params: { id: string }
     // In a real application, you would fetch the processing result from a database
     // For this example, we're constructing the URLs based on the ID pattern
 
-    // This is a simplified example - in a real app, you would check if these files exist
-    const originalUrl = `${process.env.NEXT_PUBLIC_VERCEL_BLOB_URL || "https://public.blob.vercel-storage.com"}/images/${id}/original.jpg`
-    const processedUrl = `${process.env.NEXT_PUBLIC_VERCEL_BLOB_URL || "https://public.blob.vercel-storage.com"}/images/${id}/processed.jpg`
+    const originalUrl = `/api/images/${id}/original`
+    const processedUrl = `/api/images/${id}/processed`
 
     return NextResponse.json({
       id,
