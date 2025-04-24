@@ -14,13 +14,17 @@ export async function uploadImage(file: File): Promise<{ id: string }> {
   try {
     // Generate a unique ID for this processing job
     const id = crypto.randomUUID()
+    console.log("Generated ID:", id)
 
     // Upload the original image to Vercel Blob
+    console.log("Uploading to Vercel Blob...")
     const { url } = await put(`images/${id}/original.jpg`, file, {
       access: "public",
     })
+    console.log("Upload successful, URL:", url)
 
     // Send the image to your Python API for processing
+    console.log("Sending to deblur API...")
     const response = await fetch("/api/deblur", {
       method: "POST",
       headers: {
@@ -33,8 +37,13 @@ export async function uploadImage(file: File): Promise<{ id: string }> {
     })
 
     if (!response.ok) {
-      throw new Error("Failed to process image")
+      const errorData = await response.json().catch(() => ({}))
+      console.error("API response not OK:", response.status, errorData)
+      throw new Error(`Failed to process image: ${response.status} ${JSON.stringify(errorData)}`)
     }
+
+    const result = await response.json()
+    console.log("Processing successful:", result)
 
     return { id }
   } catch (error) {

@@ -1,13 +1,16 @@
 import io
-
 import requests
 import sys
 from PIL import Image
 import matplotlib.pyplot as plt
 import numpy as np
+import urllib3
+
+# Disable SSL warnings (optional but helps clean up the output)
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def deblur_image(image_path, api_url="http://localhost:3000/deblur"):
+def deblur_image(image_path, api_url="https://ddf8-101-119-101-249.ngrok-free.app/deblur"):
     """
     Send an image to the deblurring API and save the result
     """
@@ -22,18 +25,20 @@ def deblur_image(image_path, api_url="http://localhost:3000/deblur"):
         # Add headers to ensure it's treated as a POST request
         headers = {
             'Accept': 'image/png',
+            'ngrok-skip-browser-warning': '1'  # Skip ngrok browser warning
         }
 
         # Print request details for debugging
         print(f"Sending POST request to {api_url}")
         print(f"Image size: {len(image_data)} bytes")
 
-        # Send the request with a timeout
+        # Send the request with a timeout and SSL verification disabled
         response = requests.post(
             api_url,
             files=files,
             headers=headers,
-            timeout=60  # Set a longer timeout
+            timeout=60,  # Set a longer timeout
+            verify=False  # CRITICAL: Disable SSL verification for ngrok
         )
 
         # Check if request was successful
@@ -86,7 +91,8 @@ if __name__ == "__main__":
         sys.exit(1)
 
     image_path = sys.argv[1]
-    api_url = sys.argv[2] if len(sys.argv) > 2 else "http://localhost:3000/deblur"
+    api_url = sys.argv[2] if len(
+        sys.argv) > 2 else "https://ddf8-101-119-101-249.ngrok-free.app/deblur"
 
     deblurred_img = deblur_image(image_path, api_url)
 

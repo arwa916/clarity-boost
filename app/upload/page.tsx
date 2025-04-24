@@ -42,55 +42,57 @@ export default function UploadPage() {
       router.push(`/results/${result.id}`)
     } catch (error) {
       console.error("Error uploading image:", error)
-      alert("Failed to upload image. Please try again.")
+      alert(
+          `Failed to upload image: ${error instanceof Error ? error.message : "Unknown error"}. Please check the console for more details.`,
+      )
     } finally {
       setIsUploading(false)
     }
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50">
-      <Card className="w-full max-w-3xl">
-        <CardContent className="p-6">
-          <h1 className="text-2xl font-bold mb-6 text-center">Upload Your Image</h1>
+      <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-gray-50">
+        <Card className="w-full max-w-3xl">
+          <CardContent className="p-6">
+            <h1 className="text-2xl font-bold mb-6 text-center">Upload Your Image</h1>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="image">Select an image to deblur</Label>
-              <Input id="image" type="file" accept="image/*" onChange={handleFileChange} disabled={isUploading} />
-            </div>
-
-            {preview && (
-              <div className="flex justify-center">
-                <div className="relative w-full max-w-md h-64 border rounded-md overflow-hidden">
-                  <Image
-                    src={preview || "/placeholder.svg"}
-                    alt="Image preview"
-                    fill
-                    style={{ objectFit: "contain" }}
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="image">Select an image to deblur</Label>
+                <Input id="image" type="file" accept="image/*" onChange={handleFileChange} disabled={isUploading} />
               </div>
-            )}
 
-            <div className="flex justify-center">
-              <Button type="submit" disabled={!file || isUploading} className="w-full max-w-xs">
-                {isUploading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload & Process
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </main>
+              {preview && (
+                  <div className="flex justify-center">
+                    <div className="relative w-full max-w-md h-64 border rounded-md overflow-hidden">
+                      <Image
+                          src={preview || "/placeholder.svg"}
+                          alt="Image preview"
+                          fill
+                          style={{ objectFit: "contain" }}
+                      />
+                    </div>
+                  </div>
+              )}
+
+              <div className="flex justify-center">
+                <Button type="submit" disabled={!file || isUploading} className="w-full max-w-xs">
+                  {isUploading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                  ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload & Process
+                      </>
+                  )}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </main>
   )
 }
