@@ -10,32 +10,52 @@ import numpy as np
 def deblur_image(image_path, api_url="http://localhost:3000/deblur"):
     """
     Send an image to the deblurring API and save the result
-
-    Args:
-        image_path: Path to the input image
-        api_url: URL of the deblurring API endpoint
-
-    Returns:
-        The deblurred image as a PIL Image object
     """
-    # Open the image file
-    with open(image_path, 'rb') as file:
+    try:
+        # Open and read the image file
+        with open(image_path, 'rb') as file:
+            image_data = file.read()
+
         # Prepare the file for the request
-        files = {'image': file}
+        files = {'image': (image_path, image_data, 'image/jpeg')}
 
-        # Send the request to the API
-        print(f"Sending request to {api_url}...")
-        response = requests.post(api_url, files=files)
+        # Add headers to ensure it's treated as a POST request
+        headers = {
+            'Accept': 'image/png',
+        }
 
-    # Check if request was successful
-    if response.status_code == 200:
-        print("Request successful!")
-        # Create a PIL Image from the response content
-        deblurred_img = Image.open(io.BytesIO(response.content))
-        return deblurred_img
-    else:
-        print(f"Error: {response.status_code}")
-        print(response.text)
+        # Print request details for debugging
+        print(f"Sending POST request to {api_url}")
+        print(f"Image size: {len(image_data)} bytes")
+
+        # Send the request with a timeout
+        response = requests.post(
+            api_url,
+            files=files,
+            headers=headers,
+            timeout=60  # Set a longer timeout
+        )
+
+        # Check if request was successful
+        if response.status_code == 200:
+            print("Request successful!")
+            print(f"Response size: {len(response.content)} bytes")
+            print(f"Response type: {response.headers.get('Content-Type')}")
+
+            # Create a PIL Image from the response content
+            deblurred_img = Image.open(io.BytesIO(response.content))
+            return deblurred_img
+        else:
+            print(f"Error: {response.status_code}")
+            print(f"Response headers: {response.headers}")
+            print(response.text)
+            return None
+
+    except requests.exceptions.RequestException as e:
+        print(f"Request failed: {e}")
+        return None
+    except Exception as e:
+        print(f"Error: {e}")
         return None
 
 
