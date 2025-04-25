@@ -1,4 +1,23 @@
-# Image Deblurring App
+## Next.js Dynamic Route Parameters
+
+In Next.js 15+, dynamic route parameters need to be awaited before use in API routes. This application handles this by using:
+
+```typescript
+// Correct way to access dynamic params in Next.js 15+
+export async function GET(
+        request: Request,
+        context: { params: { id: string } }
+) {
+  // First await the entire params object 
+  const params = await context.params;
+  // Then you can safely access the properties
+  const id = params.id;
+
+  // Rest of the function...
+}
+```
+
+This pattern is used in the `/api/results/[id]` and `/api/images/[id]/[type]` endpoints to avoid "params should be awaited" errors.# Image Deblurring App
 
 This is a Next.js application that demonstrates image deblurring functionality. The app allows users to upload blurry images and processes them to create sharper, clearer versions.
 
@@ -34,6 +53,24 @@ This application uses in-memory storage for image data. In a production environm
 ### Python API Integration
 
 The application is designed to connect to an external Python API for image processing. Configure the connection by setting the `PYTHON_API_URL` environment variable.
+
+#### API Contract
+
+The application expects the Python API to have the following contract:
+
+- **Endpoint**: `/deblur` or any path specified in the `PYTHON_API_URL` environment variable
+- **Method**: POST
+- **Request Format**:
+  - Content-Type: multipart/form-data
+  - Field name for image: "image"
+- **Request Headers**:
+  - 'Accept': 'image/png'
+  - 'ngrok-skip-browser-warning': '1' (if using ngrok)
+- **Response**:
+  - Content-Type: image/png
+  - Body: The deblurred image as a PNG file
+
+This contract matches the Python client example provided in the repository.
 
 ## Environment Variables
 

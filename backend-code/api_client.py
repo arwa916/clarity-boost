@@ -10,7 +10,7 @@ import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-def deblur_image(image_path, api_url="https://d0af-13-211-227-178.ngrok-free.app/deblur"):
+def deblur_image(image_path, api_url="http://localhost:8000/deblur"):
     """
     Send an image to the deblurring API and save the result
     """
@@ -92,7 +92,7 @@ if __name__ == "__main__":
 
     image_path = sys.argv[1]
     api_url = sys.argv[2] if len(
-        sys.argv) > 2 else "https://d0af-13-211-227-178.ngrok-free.app/deblur"
+        sys.argv) > 2 else "http://localhost:8000/deblur"
 
     deblurred_img = deblur_image(image_path, api_url)
 

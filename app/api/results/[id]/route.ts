@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server"
 
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+export async function GET(
+    request: Request,
+    context: { params: { id: string } }
+) {
   try {
-    const id = params.id
+    // First await the entire params object
+    const params = await context.params;
+    const id = params.id;
 
     if (!id) {
       return NextResponse.json({ error: "Missing ID parameter" }, { status: 400 })

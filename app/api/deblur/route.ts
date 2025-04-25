@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { storeImages } from "@/lib/image-storage"
+import { storeImages } from "@/lib/global-storage"
 
 export async function POST(request: Request) {
   try {
@@ -53,9 +53,16 @@ export async function POST(request: Request) {
       const formData = new FormData()
       formData.append("image", imageBlob)
 
+      // Headers to match the Python client's request format
+      const headers = {
+        'Accept': 'image/png',
+        'ngrok-skip-browser-warning': '1' // Include this if using ngrok
+      }
+
       const deblurResponse = await fetch(pythonApiUrl, {
         method: "POST",
         body: formData,
+        headers: headers,
       })
 
       if (!deblurResponse.ok) {
@@ -81,8 +88,9 @@ export async function POST(request: Request) {
       }
 
       // Get the processed image from the Python API
+      // The Python API returns a PNG image directly in the response body
       const processedImageBlob = await deblurResponse.blob()
-      console.log("Received processed image, size:", processedImageBlob.size)
+      console.log("Received processed image, size:", processedImageBlob.size, "Content-Type:", deblurResponse.headers.get("Content-Type"))
 
       // Store both the original and processed images
       await storeImages(id, imageBlob, processedImageBlob)

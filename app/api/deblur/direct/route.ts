@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { storeImages } from "@/lib/image-storage"
+import { storeImages } from "@/lib/global-storage"
 
 export async function POST(request: Request) {
     try {
@@ -24,9 +24,10 @@ export async function POST(request: Request) {
             // In a real app, you would ensure the Python API is working
             console.log("Using mock processing (skipping Python API)")
 
-            // Store image data in session storage or application memory
-            // For demo purposes, we'll create fake URLs that the client can use
-            // In a real application, you might want to use a database or memory cache
+            // Store both the original and processed (original in this case) images
+            await storeImages(id, image, image)
+
+            // Generate URLs for client
             const originalUrl = `/api/images/${id}/original`
             const processedUrl = `/api/images/${id}/processed`
 
@@ -43,14 +44,20 @@ export async function POST(request: Request) {
         console.log("Sending to Python API:", pythonApiUrl)
 
         try {
-            // Create a new FormData to send to the Python API
+            // Create a new FormData to send to the Python API - matching the Python client format
             const apiFormData = new FormData()
             apiFormData.append("image", image)
-            apiFormData.append("id", id)
+
+            // Headers to match the Python client's request format
+            const headers = {
+                'Accept': 'image/png',
+                'ngrok-skip-browser-warning': '1' // Include this if using ngrok
+            }
 
             const deblurResponse = await fetch(pythonApiUrl, {
                 method: "POST",
                 body: apiFormData,
+                headers: headers,
             })
 
             if (!deblurResponse.ok) {
@@ -59,12 +66,12 @@ export async function POST(request: Request) {
                 // TEMPORARY SOLUTION: If Python API fails, use the original image as fallback
                 console.log("Python API failed, using original image as fallback")
 
+                // Store both the original and processed (original in this case) images
+                await storeImages(id, image, image)
+
                 // Generate URLs for client
                 const originalUrl = `/api/images/${id}/original`
                 const processedUrl = `/api/images/${id}/processed` // Same as original in this case
-
-                // Store the original image in session or memory cache
-                // This is where you'd implement your storage solution
 
                 return NextResponse.json({
                     success: true,
@@ -76,15 +83,16 @@ export async function POST(request: Request) {
             }
 
             // Get the processed image from the Python API
+            // The Python API returns a PNG image directly in the response body
             const processedImageBlob = await deblurResponse.blob()
-            console.log("Received processed image, size:", processedImageBlob.size)
+            console.log("Received processed image, size:", processedImageBlob.size, "Content-Type:", deblurResponse.headers.get("Content-Type"))
+
+            // Store both the original and processed images
+            await storeImages(id, image, processedImageBlob)
 
             // Generate URLs for client
             const originalUrl = `/api/images/${id}/original`
             const processedUrl = `/api/images/${id}/processed`
-
-            // Store both the original and processed images
-            await storeImages(id, image, processedImageBlob)
 
             return NextResponse.json({
                 success: true,
@@ -97,6 +105,9 @@ export async function POST(request: Request) {
 
             // TEMPORARY SOLUTION: If Python API throws an error, use the original image as fallback
             console.log("Python API error, using original image as fallback")
+
+            // Store both the original and processed (original in this case) images
+            await storeImages(id, image, image)
 
             // Generate URLs for client
             const originalUrl = `/api/images/${id}/original`

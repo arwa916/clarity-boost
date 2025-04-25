@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
-import { getImage } from "@/lib/image-storage"
+import { getImage } from "@/lib/global-storage"
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { id: string; type: string } }
+    context: { params: { id: string; type: string } }
 ) {
     try {
+        // First await the entire params object
+        const params = await context.params;
         const id = params.id;
         const type = params.type; // 'original' or 'processed'
 
@@ -22,11 +24,12 @@ export async function GET(
 
         if (image) {
             // If we have the image stored, return it
-
             // Return the image with the appropriate content type
+            // Note that the processed image from the Python API will be a PNG
+            const contentType = type === "processed" ? "image/png" : (image.type || "image/jpeg");
             return new NextResponse(image, {
                 headers: {
-                    "Content-Type": image.type || "image/jpeg",
+                    "Content-Type": contentType,
                     "Cache-Control": "public, max-age=3600", // Cache for 1 hour
                 },
             });
@@ -44,9 +47,9 @@ export async function GET(
             });
         }
     } catch (error) {
-        console.error(`Error serving ${params.type} image:`, error);
+        console.error(`Error serving image:`, error);
         return NextResponse.json({ error: "Failed to serve image" }, { status: 500 });
     }
 }
 
-// This file now uses the centralized image storage from lib/image-storage.ts
+// This file uses the centralized image storage from lib/image-storage.ts
