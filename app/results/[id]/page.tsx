@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -34,25 +33,35 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
 
     fetchResults()
 
-    // Set up cleanup when the component unmounts
+    // Set up cleanup when component unmounts
     return () => {
-      console.log("[Component] Unmounting ResultsPage component, triggering cleanup for ID:", params.id)
-      cleanupImages(params.id)
+      cleanupCurrentImages()
     }
   }, [params.id])
 
-  // Function to clean up images when user leaves the page
+  // Cleanup function that will be used whenever we navigate away
+  const cleanupCurrentImages = async () => {
+    if (params.id) {
+      console.log(`[UI] Component unmounting, cleaning up images for ID: ${params.id}`)
+      try {
+        // Wait for images to be deleted before proceeding
+        await cleanupImages(params.id)
+      } catch (error) {
+        console.error("[UI] Error during cleanup:", error)
+      }
+    }
+  }
+
+  // Function to clean up images
   const cleanupImages = async (id: string): Promise<boolean> => {
     try {
-      console.log(`[UI] Cleaning up images for ID: ${id}`)
+      console.log(`[UI] Calling cleanup API for ID: ${id}`)
 
       // Call the cleanup API endpoint
       const response = await fetch(`/api/cleanup/${id}`, {
         method: 'DELETE',
-        // Add cache: 'no-store' to prevent caching of the DELETE request
         cache: 'no-store',
         headers: {
-          // Add a cache-busting header
           'Pragma': 'no-cache',
           'Cache-Control': 'no-cache'
         }
@@ -84,11 +93,15 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
     }
   }
 
-  const handleGoHome = () => {
-    // Clean up images before going home
-    if (params.id) {
-      cleanupImages(params.id)
-    }
+  const handleProcessAnother = async () => {
+    console.log("[UI] Process Another Image button clicked")
+    await cleanupCurrentImages()
+    router.push("/upload")
+  }
+
+  const handleGoHome = async () => {
+    console.log("[UI] Back to Home button clicked")
+    await cleanupCurrentImages()
     router.push("/")
   }
 
@@ -120,9 +133,7 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
             ) : error ? (
                 <div className="text-center py-8">
                   <p className="text-red-500 mb-4">{error}</p>
-                  <Link href="/upload" passHref>
-                    <Button>Try Again</Button>
-                  </Link>
+                  <Button onClick={handleProcessAnother}>Try Again</Button>
                 </div>
             ) : (
                 <div className="space-y-6">
@@ -132,10 +143,14 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
                       <div className="relative w-full h-64 border rounded-md overflow-hidden bg-white">
                         {originalImage && (
                             <Image
-                                src={originalImage || "/placeholder.svg"}
+                                src={originalImage}
                                 alt="Original image"
                                 fill
                                 style={{ objectFit: "contain" }}
+                                // Add key to force re-render if URL changes
+                                key={`original-${params.id}`}
+                                priority={true}
+                                unoptimized={true}
                             />
                         )}
                       </div>
@@ -145,10 +160,14 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
                       <div className="relative w-full h-64 border rounded-md overflow-hidden bg-white">
                         {processedImage && (
                             <Image
-                                src={processedImage || "/placeholder.svg"}
+                                src={processedImage}
                                 alt="Deblurred image"
                                 fill
                                 style={{ objectFit: "contain" }}
+                                // Add key to force re-render if URL changes
+                                key={`processed-${params.id}`}
+                                priority={true}
+                                unoptimized={true}
                             />
                         )}
                       </div>
@@ -156,19 +175,17 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
                   </div>
 
                   <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
-                    <Button onClick={handleDownload} className="flex-1 max-w-xs mx-auto">
+                    <Button
+                        onClick={handleDownload}
+                        className="flex-1 max-w-xs mx-auto"
+                    >
                       <Download className="mr-2 h-4 w-4" />
                       Download Deblurred Image
                     </Button>
                     <Button
                         variant="outline"
                         className="flex-1 max-w-xs mx-auto"
-                        onClick={() => {
-                          console.log("[UI] Process Another Image button clicked, cleaning up current images first")
-                          cleanupImages(params.id).then(() => {
-                            router.push("/upload")
-                          })
-                        }}
+                        onClick={handleProcessAnother}
                     >
                       Process Another Image
                     </Button>
