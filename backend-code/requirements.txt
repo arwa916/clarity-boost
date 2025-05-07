@@ -1,8 +1,0 @@
-pillow
-matplotlib
-flask
-tensorflow
-h5py
-tqdm
-numpy
-gunicorn
