@@ -14,7 +14,7 @@ declare global {
 const IMAGE_MAX_AGE = 1000 * 60 * 5;
 
 // Maximum number of entries to keep in storage
-const MAX_STORAGE_ENTRIES = 2;
+const MAX_STORAGE_ENTRIES = 5;
 
 // Ensure our storage map exists in the global scope
 if (!global.__imageStorage) {
