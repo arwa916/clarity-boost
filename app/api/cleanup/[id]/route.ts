@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { cleanupImage, getStorageStats } from "@/lib/global-storage";
+import { cleanupImage, getStorageStats } from "@/lib/vercel-blob-storage";
 
 export async function DELETE(
     request: Request,
@@ -17,16 +17,16 @@ export async function DELETE(
         console.log(`[CLEANUP-API] Received cleanup request for ID: ${id}`);
 
         // Get storage stats before cleanup
-        const beforeStats = getStorageStats();
-        console.log(`[CLEANUP-API] Before cleanup - Storage entries: ${beforeStats.count}, Size: ${Math.round(beforeStats.totalSize / 1024)} KB`);
+        const beforeStats = await getStorageStats();
+        console.log(`[CLEANUP-API] Before cleanup - Storage entries: ${beforeStats.count}, Size: ${Math.round(beforeStats.size / 1024)} KB`);
 
         // Clean up the image data
-        const cleanupResult = cleanupImage(id);
+        const cleanupResult = await cleanupImage(id);
         console.log(`[CLEANUP-API] Cleanup result for ID ${id}: ${cleanupResult ? 'SUCCESS' : 'Image not found or cleanup failed'}`);
 
         // Get storage stats after cleanup
-        const afterStats = getStorageStats();
-        console.log(`[CLEANUP-API] After cleanup - Storage entries: ${afterStats.count}, Size: ${Math.round(afterStats.totalSize / 1024)} KB`);
+        const afterStats = await getStorageStats();
+        console.log(`[CLEANUP-API] After cleanup - Storage entries: ${afterStats.count}, Size: ${Math.round(afterStats.size / 1024)} KB`);
 
         return NextResponse.json({
             success: cleanupResult,
