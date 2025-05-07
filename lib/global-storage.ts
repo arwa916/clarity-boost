@@ -76,11 +76,18 @@ export function deleteImages(id: string): boolean {
  * Delete images for a specific ID when the user leaves the results page
  * This can be called from the client side via an API endpoint
  */
-export function cleanupImage(id: string): void {
+export function cleanupImage(id: string): boolean {
+    console.log(`[CLEANUP] Attempting to clean up images for ID ${id}`);
+
     if (global.__imageStorage!.has(id)) {
-        console.log(`Cleaning up images for ID ${id}`);
-        global.__imageStorage!.delete(id);
-        console.log(`Storage now has ${global.__imageStorage!.size} entries after cleanup`);
+        console.log(`[CLEANUP] Found images for ID ${id}, deleting...`);
+        const result = global.__imageStorage!.delete(id);
+        console.log(`[CLEANUP] Deletion result: ${result ? 'SUCCESS' : 'FAILED'}`);
+        console.log(`[CLEANUP] Storage now has ${global.__imageStorage!.size} entries after cleanup`);
+        return result;
+    } else {
+        console.log(`[CLEANUP] No images found for ID ${id}`);
+        return false;
     }
 }
 

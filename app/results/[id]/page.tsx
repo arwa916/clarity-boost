@@ -36,30 +36,40 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
 
     // Set up cleanup when the component unmounts
     return () => {
-      // Only cleanup if we successfully loaded the images
-      if (originalImage && processedImage) {
-        cleanupImages(params.id)
-      }
+      console.log("[Component] Unmounting ResultsPage component, triggering cleanup for ID:", params.id)
+      cleanupImages(params.id)
     }
-  }, [params.id, originalImage, processedImage])
+  }, [params.id])
 
   // Function to clean up images when user leaves the page
-  const cleanupImages = async (id: string) => {
+  const cleanupImages = async (id: string): Promise<boolean> => {
     try {
-      console.log(`Cleaning up images for ID: ${id}`)
+      console.log(`[UI] Cleaning up images for ID: ${id}`)
 
       // Call the cleanup API endpoint
       const response = await fetch(`/api/cleanup/${id}`, {
         method: 'DELETE',
+        // Add cache: 'no-store' to prevent caching of the DELETE request
+        cache: 'no-store',
+        headers: {
+          // Add a cache-busting header
+          'Pragma': 'no-cache',
+          'Cache-Control': 'no-cache'
+        }
       })
 
       if (response.ok) {
-        console.log(`Successfully cleaned up images for ID: ${id}`)
+        const result = await response.json()
+        console.log(`[UI] Successfully cleaned up images for ID: ${id}`, result)
+        return true
       } else {
-        console.error(`Failed to clean up images for ID: ${id}`, await response.json())
+        const errorData = await response.json().catch(() => ({}))
+        console.error(`[UI] Failed to clean up images for ID: ${id}`, errorData)
+        return false
       }
     } catch (error) {
-      console.error("Error cleaning up images:", error)
+      console.error("[UI] Error cleaning up images:", error)
+      return false
     }
   }
 
@@ -150,11 +160,18 @@ export default function ResultsPage({ params }: { params: { id: string } }) {
                       <Download className="mr-2 h-4 w-4" />
                       Download Deblurred Image
                     </Button>
-                    <Link href="/upload" passHref>
-                      <Button variant="outline" className="flex-1 max-w-xs mx-auto">
-                        Process Another Image
-                      </Button>
-                    </Link>
+                    <Button
+                        variant="outline"
+                        className="flex-1 max-w-xs mx-auto"
+                        onClick={() => {
+                          console.log("[UI] Process Another Image button clicked, cleaning up current images first")
+                          cleanupImages(params.id).then(() => {
+                            router.push("/upload")
+                          })
+                        }}
+                    >
+                      Process Another Image
+                    </Button>
                   </div>
                 </div>
             )}

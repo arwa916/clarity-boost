@@ -16,9 +16,11 @@ export async function DELETE(
 
         // Get storage stats before cleanup
         const beforeStats = getStorageStats();
+        console.log(`[API] Before cleanup stats: ${JSON.stringify(beforeStats)}`);
 
         // Clean up the image data
-        cleanupImage(id);
+        const cleanupResult = cleanupImage(id);
+        console.log(`[API] Cleanup result for ID ${id}: ${cleanupResult ? 'SUCCESS' : 'FAILED'}`);
 
         // Get storage stats after cleanup
         const afterStats = getStorageStats();
